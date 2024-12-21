@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "527371548751",
+    "project_id": "indoor-plant-app",
+    "storage_bucket": "indoor-plant-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527371548751:android:b10df314bafa13a3b1d23a",
+        "android_client_info": {
+          "package_name": "com.example.indoor_plant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAw_lAxyetkIvOiuNbl8KBLoJ6hBxLI07U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
