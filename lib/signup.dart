@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'login.dart'; // Navigate to login page after successful signup
+import 'login.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({Key? key}) : super(key: key);
@@ -13,11 +13,19 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _errorMessage = '';
 
   Future<void> _signup() async {
     try {
+      if (_passwordController.text != _confirmPasswordController.text) {
+        setState(() {
+          _errorMessage = 'Passwords do not match';
+        });
+        return;
+      }
+
       final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
@@ -43,134 +51,170 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F5E9),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo
-                ClipOval(
-                  child: Image.asset(
-                    'assets/images/logo_splash_screen.jpg',
-                    height: 120,
-                    width: 120,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                const Text(
-                  'Create Your Account!',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Please sign up to continue',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // Name Input
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.person, color: Colors.green),
-                    labelText: 'Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/iPhone8.jpg', // Path to your background image
+              fit: BoxFit.cover,
+            ),
+          ),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Title
+                  const Text(
+                    'Register',
+                    style: TextStyle(
+                      fontSize: 42,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 10),
 
-                // Email Input
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.email, color: Colors.green),
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
+                  // Subtitle
+                  const Text(
+                    'Create your new account',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.brown,
                     ),
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 30),
 
-                // Password Input
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock, color: Colors.green),
-                    labelText: 'Password',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
+                  // Full Name Field
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      hintText: 'Full Name',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      prefixIcon: const Icon(Icons.person, color: Colors.brown),
                     ),
                   ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // Error Message
-                if (_errorMessage.isNotEmpty)
-                  Text(
-                    _errorMessage,
-                    style: TextStyle(color: Colors.red, fontSize: 14),
+                  // Email Field
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      hintText: 'Email Address',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      prefixIcon: const Icon(Icons.email, color: Colors.brown),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
                   ),
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 30),
+                  // Password Field
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      prefixIcon: const Icon(Icons.lock, color: Colors.brown),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-                // Signup Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                  // Confirm Password Field
+                  TextField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Confirm Password',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      prefixIcon: const Icon(Icons.lock, color: Colors.brown),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Error Message
+                  if (_errorMessage.isNotEmpty)
+                    Text(
+                      _errorMessage,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  const SizedBox(height: 20),
+
+                  // Sign Up Button
+                  ElevatedButton(
                     onPressed: _signup,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      backgroundColor: Colors.brown,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: const Size(double.infinity, 50),
                     ),
                     child: const Text(
                       'Sign Up',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 10),
 
-                const SizedBox(height: 20),
+                  // Terms and Privacy Notice
+                  const Text(
+                    'By signing up you agree to our terms of use\nand privacy notice.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.brown),
+                  ),
+                  const SizedBox(height: 20),
 
-                // Login Link
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
-                    );
-                  },
-                  child: const Text(
-                    'Already have an account? Log in here',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                  // Already have an account? Login
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
+                      );
+                    },
+                    child: RichText(
+                      text: TextSpan(
+                        text: "Already have an account? ",
+                        style: const TextStyle(color: Colors.brown, fontSize: 14),
+                        children: [
+                          TextSpan(
+                            text: 'Login',
+                            style: TextStyle(
+                              color: Colors.green[400],
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
