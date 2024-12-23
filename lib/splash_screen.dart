@@ -10,46 +10,71 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _showSecondImage = false; // للتحكم في عرض الصورة الثانية
+
   @override
   void initState() {
     super.initState();
 
-    Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+
+    Timer(const Duration(seconds: 5), () {
+      setState(() {
+        _showSecondImage = true; // عرض الصورة الثانية
+      });
+
+
+      Timer(const Duration(seconds: 4), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F5E9),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipOval(
-              child: Image.asset(
-                'assets/images/logo_splash_screen.jpg',
-                height: 200,
-                width: 200,
-                fit: BoxFit.cover,
-              ),
+      body: Stack(
+        children: [
+          // الخلفية
+          Positioned.fill(
+            child: Image.asset(
+              _showSecondImage
+                  ? 'assets/images/iPhone.jpg' // الصورة الثانية
+                  : 'assets/images/aa.jpg', // الصورة الأولى
+              fit: BoxFit.cover,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "Bringing life to your home with healthy indoor plants.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // النص الرئيسي
+                const Text(
+                  "",
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF8FBC8F),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // الصورة الرئيسية (فقط عند الصورة الأولى)
+                if (!_showSecondImage)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/images/dd.jpg', // مسار صورة النبات
+                      height: 250,
+                      width: 250,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
