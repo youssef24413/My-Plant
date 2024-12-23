@@ -30,12 +30,6 @@ class _PredictionScreenState extends State<PredictionScreen> {
     }
   }
 
-  // دالة لتطبيع الصورة
-  List<int> normalizeImage(List<int> imageBytes) {
-    // تطبيع الصورة إلى نطاق [0, 1]
-    return imageBytes.map((e) => (e / 255.0 * 255).round()).toList();
-  }
-
   // دالة لإرسال الصورة إلى السيرفر والتنبؤ
   Future<void> predict() async {
     if (_file == null) {
@@ -49,11 +43,18 @@ class _PredictionScreenState extends State<PredictionScreen> {
     });
 
     try {
-      // تحويل الصورة إلى بايتات ثم تطبيعها
+      // تحويل الصورة إلى بايتات ثم ترميزها إلى Base64
       List<int> imageBytes = _file!.readAsBytesSync();
-      List<int> normalizedImage = normalizeImage(imageBytes); // تطبيع الصورة
+      String base64String = base64Encode(imageBytes);
 
-      String base64String = base64Encode(normalizedImage);
+      // التأكد من أن الصورة صالحة قبل الإرسال
+      if (base64String.isEmpty) {
+        print("Image is empty or corrupted");
+        setState(() {
+          body = "Invalid image!";
+        });
+        return;
+      }
 
       Map<String, String> headers = {
         'Content-Type': 'application/json',
@@ -62,7 +63,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
 
       // إرسال الصورة إلى السيرفر
       final response = await http.put(
-        Uri.parse("http://192.168.1.9:5000/predict"), // تأكد من تحديث هذا العنوان
+        Uri.parse("http://172.20.10.2:5000/predict"),
         body: jsonEncode({'image': base64String, 'model': 'test'}),
         headers: headers,
       );
@@ -77,8 +78,8 @@ class _PredictionScreenState extends State<PredictionScreen> {
         if (!mounted) return; // تحقق مرة أخرى بعد العملية
         setState(() {
           final responseData = jsonDecode(response.body);
-          if (responseData.containsKey('predicted_class')) {
-            body = responseData['predicted_class'];
+          if (responseData.containsKey('plant_name') && responseData.containsKey('disease_name')) {
+            body = 'Plant: ${responseData['plant_name']}\nDisease: ${responseData['disease_name']}';
           } else {
             body = 'Prediction failed or no class found';
           }
@@ -95,25 +96,25 @@ class _PredictionScreenState extends State<PredictionScreen> {
     }
   }
 
-  // دالة لعرض الحوار لتحميل الصورة
+  // دالة لعرض الحوار
   void _showUploadDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Upload Disease Plant'),
+          title: const Text('Upload Image'),
           content: const Text('Would you like to upload a photo?'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                uploadImage();
+                Navigator.of(context).pop(); // إغلاق الحوار
+                uploadImage(); // استدعاء دالة تحميل الصورة
               },
               child: const Text('Yes'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // إغلاق الحوار
               },
               child: const Text('No'),
             ),
@@ -123,11 +124,12 @@ class _PredictionScreenState extends State<PredictionScreen> {
     );
   }
 
+  // واجهة المستخدم
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Prediction Screen"),
+        title: const Text("Disease Prediction"),
         backgroundColor: Colors.green,
       ),
       body: Center(
@@ -137,72 +139,75 @@ class _PredictionScreenState extends State<PredictionScreen> {
             children: [
               ElevatedButton.icon(
                 onPressed: () => _showUploadDialog(context),
-                icon: const Icon(Icons.camera_alt),
-                label: const Text('Upload Photo'),
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Upload Image'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                      horizontal: 30, vertical: 15),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
               ),
               const SizedBox(height: 20),
               if (_file != null) ...[
-                Image.file(
-                  _file!,
-                  height: 200,
-                  width: 200,
-                  fit: BoxFit.cover,
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blueAccent, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Image.file(
+                    _file!,
+                    height: 200,
+                    width: 200,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: isLoading ? null : predict,
-                      child: isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Predict Disease Plant'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        textStyle: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (!mounted) return;
-                        setState(() {
-                          _file = null;
-                          body = '';
-                        });
-                      },
-                      child: const Text('Remove Photo'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        textStyle: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
+                ElevatedButton(
+                  onPressed: isLoading ? null : predict,
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Predict Disease'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orangeAccent,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    if (!mounted) return;
+                    setState(() {
+                      _file = null;
+                      body = '';
+                    });
+                  },
+                  child: const Text('Remove Image'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ],
               if (body.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.lightGreen[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.green, width: 1),
+                  ),
                   child: Text(
-                    'Response: $body',
-                    style: const TextStyle(fontSize: 26, color: Colors.greenAccent),
+                    ' $body',
+                    style: const TextStyle(
+                        fontSize: 18, color: Colors.green),
                     textAlign: TextAlign.center,
                   ),
                 ),
